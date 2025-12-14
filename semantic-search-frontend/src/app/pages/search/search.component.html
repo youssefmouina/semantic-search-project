@@ -1,0 +1,169 @@
+<div class="search-container">
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <div class="logo-icon">🍽️</div>
+      <h1 class="hero-title">Découvrez vos repas</h1>
+      <p class="hero-subtitle">Recherche sémantique intelligente pour trouver le repas parfait</p>
+
+      <!-- Search Bar -->
+      <div class="search-wrapper">
+        <div class="search-box">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+          <input
+            type="text"
+            class="search-input"
+            [(ngModel)]="searchQuery"
+            (keypress)="onKeyPress($event)"
+            placeholder="Ex: repas léger pour le soir, plat végétarien rapide..."
+          />
+          <button class="search-button" (click)="onSearch()" [disabled]="isSearching">
+            <span *ngIf="!isSearching">Rechercher</span>
+            <span *ngIf="isSearching" class="loader"></span>
+          </button>
+        </div>
+        <div class="search-suggestions">
+          <span class="suggestion-label">Suggestions :</span>
+          <button class="suggestion-tag" (click)="searchQuery = 'petit-déjeuner healthy'; onSearch()">🥗 Petit-déjeuner healthy</button>
+          <button class="suggestion-tag" (click)="searchQuery = 'repas rapide'; onSearch()">⚡ Repas rapide</button>
+          <button class="suggestion-tag" (click)="searchQuery = 'plat réconfortant'; onSearch()">🍲 Plat réconfortant</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Decorative Elements -->
+    <div class="floating-emoji emoji-1">🥑</div>
+    <div class="floating-emoji emoji-2">🍕</div>
+    <div class="floating-emoji emoji-3">🥗</div>
+    <div class="floating-emoji emoji-4">🍜</div>
+  </div>
+
+  <!-- Results Section -->
+  <div class="results-section" *ngIf="hasSearched">
+    <div class="results-header">
+      <h2 class="results-title">
+        <span *ngIf="!isSearching && meals.length > 0">{{ meals.length }} repas trouvés pour "{{ searchQuery }}"</span>
+        <span *ngIf="isSearching">Recherche en cours...</span>
+        <span *ngIf="!isSearching && meals.length === 0">Aucun résultat trouvé</span>
+      </h2>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-grid" *ngIf="isSearching">
+      <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6]">
+        <div class="skeleton-image"></div>
+        <div class="skeleton-content">
+          <div class="skeleton-title"></div>
+          <div class="skeleton-text"></div>
+          <div class="skeleton-text short"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Meals Grid -->
+    <div class="meals-grid" *ngIf="!isSearching && meals.length > 0">
+      <div class="meal-card" *ngFor="let meal of meals; let i = index" [style.animation-delay]="i * 0.1 + 's'" (click)="selectMeal(meal)">
+        <div class="meal-image-wrapper">
+          <img [src]="meal.mealimageurl" [alt]="meal.mealName" class="meal-image" />
+          <div class="meal-category">{{ meal.foodType }}</div>
+        </div>
+        <div class="meal-content">
+          <h3 class="meal-name">{{ meal.mealName }}</h3>
+          <p class="meal-description">{{ meal.description | slice:0:100 }}...</p>
+          <div class="meal-meta">
+            <span class="meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+              {{ meal.mealTargetCalories }} cal
+            </span>
+            <span class="meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              {{ meal.cooking_method }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isSearching && meals.length === 0">
+      <div class="empty-icon">🔍</div>
+      <h3>Aucun repas trouvé</h3>
+      <p>Essayez avec d'autres termes de recherche</p>
+    </div>
+  </div>
+
+  <!-- Meal Details Modal -->
+  <div class="modal-overlay" *ngIf="selectedMeal" (click)="closeDetails()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeDetails()">×</button>
+
+      <div class="modal-header">
+        <img [src]="selectedMeal.mealimageurl" [alt]="selectedMeal.mealName" class="modal-image" />
+        <div class="modal-header-overlay">
+          <h2 class="modal-title">{{ selectedMeal.mealName }}</h2>
+          <div class="modal-tags">
+            <span class="modal-tag">{{ selectedMeal.foodType }}</span>
+            <span class="modal-tag">{{ selectedMeal.cooking_method }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-description">{{ selectedMeal.description }}</p>
+
+        <!-- Nutrition Info -->
+        <div class="nutrition-section">
+          <h3>🥗 Informations nutritionnelles</h3>
+          <div class="nutrition-grid">
+            <div class="nutrition-item">
+              <span class="nutrition-value">{{ selectedMeal.mealTargetCalories }}</span>
+              <span class="nutrition-label">Calories</span>
+            </div>
+            <div class="nutrition-item">
+              <span class="nutrition-value">{{ selectedMeal.mealTargetProtein }}g</span>
+              <span class="nutrition-label">Protéines</span>
+            </div>
+            <div class="nutrition-item">
+              <span class="nutrition-value">{{ selectedMeal.mealTargetCarbs }}g</span>
+              <span class="nutrition-label">Glucides</span>
+            </div>
+            <div class="nutrition-item">
+              <span class="nutrition-value">{{ selectedMeal.mealTargetFats }}g</span>
+              <span class="nutrition-label">Lipides</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Meal Types -->
+        <div class="meal-types-section">
+          <h3>🍽️ Types de repas</h3>
+          <div class="meal-types-list">
+            <span class="meal-type-badge" *ngFor="let type of selectedMeal.mealTypes">{{ type }}</span>
+          </div>
+        </div>
+
+        <!-- Ingredients -->
+        <div class="ingredients-section">
+          <h3>📝 Ingrédients</h3>
+          <ul class="ingredients-list">
+            <li *ngFor="let item of selectedMeal.mealIngredients" class="ingredient-item">
+              <span class="ingredient-name">{{ item.ingredient.name }}</span>
+              <span class="ingredient-portion" *ngIf="item.portion && item.unit">
+                {{ item.portion }} {{ item.unit }}
+              </span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

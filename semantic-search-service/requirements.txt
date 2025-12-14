@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+python-docx
+requests
+sentence-transformers
+faiss-cpu
+numpy
